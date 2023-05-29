@@ -1,0 +1,165 @@
+---
+title: "Datos; Coffee Quality Institute (CQI)  "
+format: 
+  html: 
+    toc: true
+    theme: united
+    lang: es
+---
+
+# Introducción
+
+Este documento presenta un conjunto de visualizaciones de datos elaborados con paquetes del lenguaje R como ggplot2, ploty y DT, entre otros.
+
+Para este trabajo se toma los datos el repositorio en GitHub de Fatih Boyar en https://github.com/fatih-boyar/coffee-quality-data-CQI.
+
+# Carga de bibliotecas
+
+```{r}
+#| label:  carga-bibliotecas
+#| warning: false
+#| code-fold: true
+
+library(tidyverse)
+library(plotly)
+library(DT)
+library(dplyr)
+library(ggthemes)
+library(hrbrthemes)
+library(ggplot2)
+library(sf)
+library(readr)
+library(gapminder)
+```
+
+# Carga de datos cafe
+
+```{r}
+#| label:  carga-archivo csv
+#| warning: false
+#| code-fold: true
+
+# Carga del archivo CSV de entrada en un dataframe
+
+datos_cafe <-
+  read.csv(
+    file = "C:/Users/C04513/Desktop/tarea02/tarea02/tarea02/coffee-quality.csv"
+  )
+
+```
+
+# Tabla interactiva
+
+```{r}
+#| code-fold: true
+#| label: carga-datos
+#| warning: false
+#| message: false
+
+datos_cafe <-
+  read_delim(
+    file = "C:/Users/C04513/Desktop/tarea02/tarea02/tarea02/coffee-quality.csv",
+    col_select = c( "Country_of_Origin",
+                    "Variety",
+                    "Color",
+                    "Altitude",
+                    "Total_Cup_Points"
+                    
+                    ))
+datos_cafe |>
+ datatable(options = list(
+      pageLength = 10,
+      language = list(url = '//cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json')
+    )
+  )
+```
+
+# Histogramas de distribución del Total Cup Points
+
+```{r}
+#| label:  histograma
+#| warning: false
+#| code-fold: true
+# Histograma ggplot2 de distribución del Total Cup Points
+histograma_ggplot2 <-
+  datos_cafe |>
+  ggplot(aes(x = Total_Cup_Points)) +
+  geom_histogram(
+    aes(
+      text = paste0(
+        "Puntajes de datos cafe (valor medio del rango): $", round(after_stat(x), 2), "\n",
+        "Frecuencia: ", after_stat(count)
+      ),
+      y = after_stat(density) # argumento necesario para crear la curva KDE
+    ),
+    bins = 6
+  ) +
+  geom_density() +
+  scale_y_continuous(labels = scales::label_comma()) + # para formatear el eje y en notación decimal
+  ggtitle(" Conteo de 206 muestras cafe") +
+  xlab("Puntaje") +
+  ylab("Frecuencias") +
+  labs(subtitle = "Puntaje de 206 expertos de cafes", caption = "Fuente: coffe.quality.ality") +
+  theme_economist()
+# Histograma plotly
+ggplotly(histograma_ggplot2, tooltip = "text") |>
+  config(locale = 'es')
+
+```
+
+# Grafico de dispersion de calidad
+
+```{r}
+#| label:  dispersion 
+#| warning: false
+#| code-fold: true
+
+
+# Gráfico de dispersión calidad del cafe
+
+grafico_dispersion <-
+  datos_cafe |>
+  ggplot(aes(x = Altitude, y = Total_Cup_Points)) +
+  geom_point(aes(
+    text = paste0(
+      "País: ", Country_of_Origin, "\n",
+      "Altitud: ", round(Altitude, 2), "\n",
+      "Puntaje total: ", round(Total_Cup_Points, 2), " puntos"
+    )
+  )) +
+  geom_smooth(method = "lm") +
+  ggtitle("Gráfico de dispersión excelencia del cafe") +
+  xlab("Altitud") +
+  ylab("Puntaje total") +
+  labs(caption = "Fuente: coffe.quality.ality") +
+  theme_economist()  
+
+# Gráfico de dispersión plotly
+ggplotly(grafico_dispersion, tooltip = "text") |>
+  config(locale = 'es')
+```
+
+# Grafico de Cajas
+
+```{r}
+#| label:  cajas
+#| warning: false
+#| code-fold: true
+
+
+  # Gráfico de caja  de distribución del cafe
+  grafico_caja_ggplot2 <-
+  datos_cafe |>
+    ggplot(aes(x= Color, y = Total_Cup_Points)) +
+    geom_boxplot() +
+    ggtitle("Distribución del Total de cafe por cupas en colores") +
+    ylab("Cafe distribucion ($ EE.UU.)") +
+    labs(subtitle = "Datos de 206 tipos de cafe", caption = " coffe.quality.ality") +
+    theme_economist()
+  
+  # Gráfico de caja plotly
+  ggplotly(grafico_caja_ggplot2) |> 
+    config(locale = 'es')
+
+
+```
